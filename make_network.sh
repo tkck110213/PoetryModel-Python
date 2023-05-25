@@ -1,0 +1,1 @@
+python3 source/network/MakeNetwork.py $1
