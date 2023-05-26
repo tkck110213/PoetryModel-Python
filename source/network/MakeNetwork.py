@@ -7,11 +7,12 @@ import sys
 
 class SimilarNetwork:
     def __init__(self):
+        print("Word2Vec loading...")
         self.model = KeyedVectors.load_word2vec_format("~/Project/Resource/jawiki.all_vectors.200d.txt")
-        self.wordlist = self.model.index_to_key[:5]
+        self.wordlist = self.model.index_to_key
 
         self.similarityNetwork = nx.Graph()
-
+        print("Complete Word2Vec loading")
     def makeSimilarNetwork(self, limit_similarity=0.5):
         self.similarityNetwork.add_nodes_from(self.wordlist)
 
@@ -34,4 +35,4 @@ def main(similar):
     sn = SimilarNetwork()
     sn.makeSimilarNetwork(limit_similarity=similar)
 
-main(sys.argv[1])
+main(float(sys.argv[1]))
