@@ -9,30 +9,23 @@ class SimilarNetwork:
     def __init__(self):
         print("Word2Vec loading...")
         self.model = KeyedVectors.load_word2vec_format("~/Project/Resource/jawiki.all_vectors.200d.txt")
-        self.wordlist = self.model.index_to_key
-
-        self.similarityNetwork = nx.Graph()
         print("Complete Word2Vec loading")
-    def makeSimilarNetwork(self, limit_similarity=0.5):
-        self.similarityNetwork.add_nodes_from(self.wordlist)
 
-        #自分以外のノード全てと類似度を求め，limit_simirality以上ならエッジを作る
-        for i, word1 in enumerate(tqdm(self.wordlist)):
-            for word2 in self.wordlist[i + 1:]:
-                if word1 in self.wordlist and word2 in self.wordlist:
-                    #ワード間の類似度を算出
-                    similarity = self.model.similarity(word1, word2)
-                    if limit_similarity < similarity:
-                        word1 = re.sub("##", "", word1)
-                        word2 = re.sub("##", "", word2)
-                        self.similarityNetwork.add_edges_from([(word1, word2, {"similarity":str(similarity)})])
+        self.wordlist = self.model.index_to_key[:2]
+        self.similarityNetwork = nx.Graph()
+        
+    def makeSimilarNetwork(self, k):
+        for word in tqdm(self.wordlist):
+            similarWords = self.model.most_similar(positive=[word], topn=k)
+            self.similarityNetwork.add_weighted_edges_from([(re.sub("##", "", word), re.sub("##", "", similar[0]), similar[1]) for similar in similarWords])
 
-        nx.write_gml(self.similarityNetwork, f"SimilarityNetwork-s{limit_similarity}.gml")
+        nx.write_gml(self.similarityNetwork, f"~/Project/Resource/SimilarityNetwork-k{k}.gml")
         
 
 
-def main(similar):
+def main(k):
     sn = SimilarNetwork()
-    sn.makeSimilarNetwork(limit_similarity=similar)
+    sn.makeSimilarNetwork(k)
 
-main(float(sys.argv[1]))
+main(int(sys.argv[1]))
+
