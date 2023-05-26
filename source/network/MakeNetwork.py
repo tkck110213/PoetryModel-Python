@@ -11,7 +11,7 @@ class SimilarNetwork:
         self.model = KeyedVectors.load_word2vec_format("~/Project/Resource/jawiki.all_vectors.200d.txt")
         print("Complete Word2Vec loading")
 
-        self.wordlist = self.model.index_to_key[:2]
+        self.wordlist = self.model.index_to_key
         self.similarityNetwork = nx.Graph()
         
     def makeSimilarNetwork(self, k):
