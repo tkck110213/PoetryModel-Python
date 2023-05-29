@@ -1,6 +1,7 @@
 import CM
 import MeCab
 from utility.util import util
+from tqdm import tqdm
 
 class PoetoyCognitiveModelBySA:
     def __init__(self, parameter):
@@ -14,7 +15,7 @@ class PoetoyCognitiveModelBySA:
         with open(courpusPath, mode="r") as f:
             poetry = f.readlines()
 
-        for i, line in enumerate(poetry):
+        for i, line in enumerate(tqdm(poetry)):
             splitWords = self._wakati.parse(line).split()
             #print(splitWords)
             for word in splitWords:
