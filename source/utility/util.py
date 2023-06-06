@@ -1,6 +1,8 @@
 import networkx as nx
 import os
 import datetime
+import itertools
+
 
 class util:
     def __init__(self):
@@ -16,3 +18,9 @@ class util:
         path = f"{dirname}/{filename}"
 
         nx.write_gml(graph, path)
+
+def flatList(multiList, duplication=False):
+    if duplication:
+        return list(itertools.chain.from_iterable(multiList))
+    else:
+        return list(set(itertools.chain.from_iterable(multiList)))

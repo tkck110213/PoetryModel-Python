@@ -3,6 +3,7 @@ import json
 import numpy as np
 import pathlib
 import os
+import utility.util as util
 
 class SpreadingActivationModel:
     def __init__(self, parameter):
@@ -11,64 +12,72 @@ class SpreadingActivationModel:
 
         print("loading lexicon network...")
         self._lexiconNetwork = nx.read_gml(f'{os.path.expanduser("~")}/Project/Resource/SimilarityNetwork-k10.gml', label="id")
-        nx.set_node_attributes(self._lexiconNetwork, 0.0, "resevoir")
+        nx.set_node_attributes(self._lexiconNetwork, 0.0, "reservoir")
+        nx.set_node_attributes(self._lexiconNetwork, 0.0, "inflow")
+        nx.set_node_attributes(self._lexiconNetwork, 0.0, "outflow")
         print("Comlete loading lexicon network!")
 
-        self._dicLabel2Index = {str(self._lexiconNetwork.nodes[i]["label"]):i for i in range(len(self._lexiconNetwork.nodes))}
+        self._dicLabel2Id = {str(self._lexiconNetwork.nodes[i]["label"]):i for i in range(len(self._lexiconNetwork.nodes))}
         
 
     def getLexiconNetwork(self):
         return self._lexiconNetwork
 
-    def randomWalk(self, targetWordIndex):
-        # Next target node choice following probablity by cosine similarity  between current target node and each neighborhood node
-        # 1. Probablity of choiced node make a calculation follwoing weight between nodes
-        iterNeighbors = list(self._lexiconNetwork.neighbors(targetWordIndex))
-        neighbors = iterNeighbors
+    def renewNeighborsInflow(self, targetWordId):
+        neighbors = list(self._lexiconNetwork.neighbors(targetWordId))
+        outflow = self._lexiconNetwork.nodes[targetWordId]["outflow"]
 
-        weights = np.array([self._lexiconNetwork[nodeIndex][targetWordIndex]["weight"] for nodeIndex in iterNeighbors])
-        probability = weights / np.sum(weights)
+        weights = np.array([self._lexiconNetwork[neighbors[i]][targetWordId]["weight"] for i in range(len(neighbors))])
+        weights = weights / np.sum(weights)
 
-        # 2. Choice next target nord by probability calulated at step 1.
-        nextTargetNordIndex = np.random.choice(neighbors, p=probability)
+        for nodeId, w in zip(neighbors, weights):
+            self._lexiconNetwork.nodes[nodeId]["inflow"] = self._lexiconNetwork.nodes[nodeId]["reservoir"] + outflow * w
 
-        return nextTargetNordIndex
-    
-        
+        return neighbors
+
+
     def activation(self, initTargetWord):
 
         # Whether initial target word exist in lexicon network
-        if initTargetWord not in self._dicLabel2Index.keys():
+        if initTargetWord not in self._dicLabel2Id.keys():
             print(f"'{initTargetWord}' not in lexicon network...")
             return
 
         r = self.parameter["r"]
-        targetWordIndex = self._dicLabel2Index[initTargetWord]
+        targetWordsId = [self._dicLabel2Id[initTargetWord]]
+        nextTargetWordsId = []
 
         for i in range(self.parameter["T"]):
+            
+            for wordId in targetWordsId:
 
-            # 1. Next target node receive "inflow" value caluclate by current node`s outflow and next node's reservoir.
-            if i == 0:
-                inflow = 100 + self._lexiconNetwork.nodes[targetWordIndex]["resevoir"]
-            else:
-                inflow = outflow + self._lexiconNetwork.nodes[targetWordIndex]["resevoir"]
+                # 1. "inflow" value has caluclated before end of step.
+                if i == 0:
+                    inflow = 100 + self._lexiconNetwork.nodes[wordId]["reservoir"]
+                else:
+                    inflow = self._lexiconNetwork.nodes[wordId]["inflow"]
 
-            # 2. "resevoir" is representing activation value in each node
-            resevoir = r * inflow
+                # 2. "reservoir" is representing activation value in each node
+                reservoir = r * inflow
 
-            # 3. Renew resvoir of current target node
-            self._lexiconNetwork.nodes[targetWordIndex]["resevoir"] = resevoir
+                # 3. Renew resvoir of current target node
+                self._lexiconNetwork.nodes[wordId]["reservoir"] = reservoir
 
-            # 4. "outflow" is amount of following out to next target nord
-            outflow = (1 - r) * inflow
-            #print(f"resevoir:{resevoir} outflow:{outflow} inflow:{inflow}")
+                # 4. "outflow" is all amount of following out to neighborhood nodes
+                outflow = (1 - r) * inflow
+                self._lexiconNetwork.nodes[wordId]["outflow"] = outflow
+                #print(f"reservoir:{reservoir} outflow:{outflow} inflow:{inflow}")
+                
+                # 5. Calculation an renew to "inflow" value which each neighborhood node
+                neighbors = self.renewNeighborsInflow(wordId) 
+                nextTargetWordsId.append(neighbors)
+                print(f"amount of neighbor nodes:{len(neighbors)}")
 
-            # 5. Next target node choice following probablity by cosine similarity  between current target node and each neighborhood node
-            nextTargetWordIndex = self.randomWalk(targetWordIndex)
-            #print(f"next target:{nextTargetWord}")
-
-            # 1.  Move to next target node
-            targetWordIndex = nextTargetWordIndex
+            # 6. Renew to activation nodes at next step(next activation is defined by neighborhood nodes of all current target nodes)
+            targetWordsId = util.flatList(nextTargetWordsId)
+            nextTargetWordsId.clear()
+            print(f"amount of next target nodes:{len(targetWordsId)}")
+                
         
 
 
