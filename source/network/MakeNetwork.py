@@ -7,7 +7,7 @@ import os
 
 class SimilarNetwork:
     def __init__(self):
-        path = f'{os.path.expanduser("~")}/Project/Resource/jawiki.all_vectors.200d.txt'
+        path = f'{os.path.expanduser("~")}/Project/Resource/lexicon_network_s0.400000.graphml'
         print(f"model path:{path}")
         print("Word2Vec loading...")
         self.model = KeyedVectors.load_word2vec_format(path)

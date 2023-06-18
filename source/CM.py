@@ -11,7 +11,7 @@ class SpreadingActivationModel:
         self.parameter = parameter
 
         print("loading lexicon network...")
-        self._lexiconNetwork = nx.read_gml(f'{os.path.expanduser("~")}/Project/Resource/SimilarityNetwork-k10.gml', label="id")
+        self._lexiconNetwork = nx.read_graphml(f'{os.path.expanduser("~")}/Project/Resource/lexicon_network_s0.400000.graphml', label="id")
         nx.set_node_attributes(self._lexiconNetwork, 0.0, "reservoir")
         nx.set_node_attributes(self._lexiconNetwork, 0.0, "inflow")
         nx.set_node_attributes(self._lexiconNetwork, 0.0, "outflow")
@@ -71,12 +71,12 @@ class SpreadingActivationModel:
                 # 5. Calculation an renew to "inflow" value which each neighborhood node
                 neighbors = self.renewNeighborsInflow(wordId) 
                 nextTargetWordsId.append(neighbors)
-                print(f"amount of neighbor nodes:{len(neighbors)}")
+                #print(f"amount of neighbor nodes:{len(neighbors)}")
 
             # 6. Renew to activation nodes at next step(next activation is defined by neighborhood nodes of all current target nodes)
             targetWordsId = util.flatList(nextTargetWordsId)
             nextTargetWordsId.clear()
-            print(f"amount of next target nodes:{len(targetWordsId)}")
+            #print(f"amount of next target nodes:{len(targetWordsId)}")
                 
         
 
