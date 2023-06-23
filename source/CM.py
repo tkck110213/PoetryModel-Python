@@ -11,13 +11,13 @@ class SpreadingActivationModel:
         self.parameter = parameter
 
         print("loading lexicon network...")
-        self._lexiconNetwork = nx.read_graphml(f'{os.path.expanduser("~")}/Project/Resource/lexicon_network_s0.400000.graphml', label="id")
+        self._lexiconNetwork = nx.read_graphml(f'{os.path.expanduser("~")}/Project/Resource/lexicon_network_s0.400000.graphml')
         nx.set_node_attributes(self._lexiconNetwork, 0.0, "reservoir")
         nx.set_node_attributes(self._lexiconNetwork, 0.0, "inflow")
         nx.set_node_attributes(self._lexiconNetwork, 0.0, "outflow")
         print("Comlete loading lexicon network!")
 
-        self._dicLabel2Id = {str(self._lexiconNetwork.nodes[i]["label"]):i for i in range(len(self._lexiconNetwork.nodes))}
+        self._dicLabel2Id = {str(self._lexiconNetwork.nodes[f"n{i}"]["label"]):f"n{i}" for i in range(len(self._lexiconNetwork.nodes))}
         
 
     def getLexiconNetwork(self):
